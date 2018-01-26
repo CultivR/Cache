@@ -6,11 +6,11 @@
 //  Copyright © 2016 Sam Soffes. All rights reserved.
 //
 
-struct AnyCache<T>: Cache {
+public struct AnyCache<T>: Cache {
 
 	// MARK: - Properties
 
-	private let _get: (String, T? -> Void) -> ()
+	private let _get: (String, @escaping (T?) -> Void) -> ()
 	private let _set: (String, T, (() -> Void)?) -> ()
 	private let _remove: (String, (() -> Void)?) -> ()
 	private let _removeAll: ((() -> Void)?) -> ()
@@ -18,7 +18,7 @@ struct AnyCache<T>: Cache {
 
 	// MARK: - Initializers
 
-	init<C: Cache where T == C.Element>(_ cache: C) {
+	public init<C: Cache>(_ cache: C) where T == C.Element {
 		_get = { cache.get(key: $0, completion: $1) }
 		_set = { cache.set(key: $0, value: $1, completion: $2) }
 		_remove = { cache.remove(key: $0, completion: $1) }
@@ -28,19 +28,19 @@ struct AnyCache<T>: Cache {
 
 	// MARK: - Cache
 
-	func get(key key: String, completion: (T? -> Void)) {
+	public func get(key: String, completion: @escaping ((T?) -> Void)) {
 		_get(key, completion)
 	}
 
-	func set(key key: String, value: T, completion: (() -> Void)?) {
+	public func set(key: String, value: T, completion: (() -> Void)? = nil) {
 		_set(key, value, completion)
 	}
 
-	func remove(key key: String, completion: (() -> Void)?) {
+	public func remove(key: String, completion: (() -> Void)? = nil) {
 		_remove(key, completion)
 	}
 
-	func removeAll(completion completion: (() -> Void)?) {
+	public func removeAll(completion: (() -> Void)? = nil) {
 		_removeAll(completion)
 	}
 }

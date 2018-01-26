@@ -10,32 +10,32 @@ import libkern
 
 /// Reads from the first cache available. Writes to all caches in order. If there is a cache miss and the value is later
 /// found in a subsequent cache, it is written to all previous caches.
-struct MultiCache<T>: Cache {
+public struct MultiCache<T>: Cache {
 
 	// MARK: - Properties
 
-	let caches: [AnyCache<T>]
+	public let caches: [AnyCache<T>]
 
 
 	// MARK: - Initializers
 
-	init(caches: [AnyCache<T>]) {
+	public init(caches: [AnyCache<T>]) {
 		self.caches = caches
 	}
 
 
 	// MARK: - Cache
 
-	func set(key key: String, value: T, completion: (() -> Void)?) {
+	public func set(key: String, value: T, completion: (() -> Void)? = nil) {
 		coordinate(block: { cache, finish in
 			cache.set(key: key, value: value, completion: finish)
 		}, completion: completion)
 	}
 
-	func get(key key: String, completion: (T? -> Void)) {
+	public func get(key: String, completion: @escaping ((T?) -> Void)) {
 		var misses = [AnyCache<T>]()
 
-		func finish(value: T?) {
+		func finish(_ value: T?) {
 			// Found
 			if let value = value {
 				// Call completion with the value
@@ -43,7 +43,7 @@ struct MultiCache<T>: Cache {
 
 				// Fill previous caches that missed
 				for miss in misses {
-					miss.set(key: key, value: value, completion: nil)
+					miss.set(key: key, value: value)
 				}
 				return
 			}
@@ -65,13 +65,13 @@ struct MultiCache<T>: Cache {
 		get(0, key: key, completion: finish)
 	}
 
-	func remove(key key: String, completion: (() -> Void)?) {
+	public func remove(key: String, completion: (() -> Void)?) {
 		coordinate(block: { cache, finish in
 			cache.remove(key: key, completion: finish)
 		}, completion: completion)
 	}
 
-	func removeAll(completion completion: (() -> Void)?) {
+	public func removeAll(completion: (() -> Void)?) {
 		coordinate(block: { cache, finish in
 			cache.removeAll(completion: finish)
 		}, completion: completion)
@@ -81,7 +81,7 @@ struct MultiCache<T>: Cache {
 	// MARK: - Private
 
 	// Calls the completion block after all messages to all caches are complete.
-	private func coordinate(block block: ((AnyCache<T>, (() -> Void)) -> Void), completion: (() -> Void)?) {
+	private func coordinate(block: ((AnyCache<T>, @escaping (() -> Void)) -> Void), completion: (() -> Void)?) {
 		// Count starts with the count of caches
 		var count = Int32(caches.count)
 
@@ -100,7 +100,7 @@ struct MultiCache<T>: Cache {
 		caches.forEach { block($0, finish) }
 	}
 
-	private func get(index: Int, key: String, completion: (T? -> Void)) {
+	private func get(_ index: Int, key: String, completion: @escaping ((T?) -> Void)) {
 		caches[index].get(key: key, completion: completion)
 	}
 }
